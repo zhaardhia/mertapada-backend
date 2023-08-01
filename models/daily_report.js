@@ -8,42 +8,46 @@ module.exports = function(sequelize, DataTypes) {
     },
     gross_profit: {
       type: DataTypes.FLOAT(255,0),
-      allowNull: false
+      allowNull: true
     },
     nett_profit: {
       type: DataTypes.FLOAT(255,0),
-      allowNull: false
+      allowNull: true
     },
     shop_expense: {
       type: DataTypes.FLOAT(255,0),
-      allowNull: false
+      allowNull: true
     },
     shop_expense_detail_id: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      allowNull: true
     },
     rent_expense: {
       type: DataTypes.FLOAT(255,0),
-      allowNull: false
+      allowNull: true
     },
     employees_salary_expense: {
       type: DataTypes.FLOAT(255,0),
-      allowNull: false
+      allowNull: true
     },
     employee_absence_id: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      allowNull: true
     },
     currentbalance: {
       type: DataTypes.FLOAT(255,0),
-      allowNull: false
+      allowNull: true
     },
     prevbalance: {
       type: DataTypes.FLOAT(255,0),
-      allowNull: false
+      allowNull: true
     },
     status: {
       type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    date: {
+      type: DataTypes.DATEONLY,
       allowNull: false
     },
     created_date: {
