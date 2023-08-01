@@ -1,0 +1,48 @@
+GET http://localhost:5000/api/v1/user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJxVGtiVEx0Wkd4dWkzVFlsdEV2cHFMT3BNIiwibmFtZSI6ImZpcnpoYSByYW1hZGhhbiIsImVtYWlsIjoiZmlyemhhQGdtYWlsLmNvbSIsImlhdCI6MTY4Mjk1MDg2MiwiZXhwIjoxNjgyOTUwODc3fQ.aGJYOKwsq4ZKY8O8cxOQrqW3JWXc0pnL2WWAM9bN3Dk
+
+###
+POST http://localhost:5000/api/v1/user-pengelola/register-user
+Content-Type: application/json
+
+{
+    "email": "zhaardhiatesting@gmail.com",
+    "phone": "08551498798",
+    "username": "testing", 
+    "first_name": "firzha", 
+    "last_name": "ardhia", 
+    "fullname": "firzha ardhia", 
+    "password": "testing", 
+    "confPassword": "testing"
+}
+
+###
+POST http://localhost:5000/api/v1/user-pengelola/login-user
+Content-Type: application/json
+
+{
+    "username": "testing", 
+    "password": "testing"
+}
+
+###
+GET http://localhost:5000/api/v1/user-pengelola/token
+
+###
+DELETE http://localhost:5000/api/v1/user-pengelola/logout-user
+
+// admin
+###
+POST http://localhost:5000/api/v1/user-admin/register-admin
+Content-Type: application/json
+
+{
+    "email": "tokomondakitchen@gmail.com", 
+    "first_name": "Monda", 
+    "last_name": "Kitchen",
+    "phone": "08551498798",
+    "fullname": "violla ayang", 
+    "password": "Danitra06", 
+    "confPassword": "Danitra06", 
+    "role": 0
+}
