@@ -21,6 +21,14 @@ const index = function (req, res, next) {
   //   });
   // })
 
+router.route("/date-in-month")
+  .get((req, res, next) => {
+    dailyReportController.checkDateInThisMonth(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+
 router.route("/check-category")
   .get((req, res, next) => {
     dailyReportController.getIsCategoryFilled(req, res).catch((error) => {
