@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('shop_expense_detail', {
+  return sequelize.define('daily_shop_item', {
     id: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -10,32 +10,12 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(255),
       allowNull: false
     },
-    daily_shop_item_id: {
-      type: DataTypes.STRING(255),
-      allowNull: true
-    },
     name: {
       type: DataTypes.STRING(255),
       allowNull: false
     },
-    price: {
-      type: DataTypes.FLOAT(255,2),
-      allowNull: false
-    },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
     unit_type: {
       type: DataTypes.STRING(255),
-      allowNull: false
-    },
-    status: {
-      type: DataTypes.STRING(255),
-      allowNull: false
-    },
-    date: {
-      type: DataTypes.DATEONLY,
       allowNull: true
     },
     created_date: {
@@ -48,7 +28,7 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     sequelize,
-    tableName: 'shop_expense_detail',
+    tableName: 'daily_shop_item',
     timestamps: false,
     indexes: [
       {

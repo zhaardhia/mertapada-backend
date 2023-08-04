@@ -1,0 +1,27 @@
+GET http://localhost:5000/api/v1/daily-report/item-shopped-by-category?category=shop-001&date=03
+
+###
+POST http://localhost:5000/api/v1/daily-report/item-shopped-by-category
+Content-Type: application/json
+
+{
+    "item_shop": [
+        {
+            "name": "ayam",
+            "category_id": "shop-001",
+            "daily_shop_item_id": "lauk-pauk-003",
+            "quantity": 5,
+            "unit_type": "kg",
+            "price": 20000
+        },
+        {
+            "name": "kwkwkwkawkoako",
+            "category_id": "shop-001",
+            "daily_shop_item_id": "additional",
+            "quantity": 3,
+            "unit_type": "kg",
+            "price": 30000
+        }
+    ],
+    "date": 03
+}

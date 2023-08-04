@@ -37,6 +37,26 @@ router.route("/check-category")
     });
   })
 
+router.route("/item-shopped-by-category")
+  .get((req, res, next) => {
+    dailyReportController.getItemShoppedByCategory(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+  .post((req, res, next) => {
+    dailyReportController.addItemShopDailyReport(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+  .delete((req, res, next) => {
+    dailyReportController.deleteDailyShopItemReport(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+  
 
 router.all("*", index);
 

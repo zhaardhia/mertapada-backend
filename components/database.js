@@ -26,6 +26,7 @@ const mertapada_balance = require("../models/mertapada_balance");
 const rent = require("../models/rent");
 const shop_expense_detail = require("../models/shop_expense_detail");
 const user = require("../models/user");
+const daily_shop_item = require("../models/daily_shop_item");
 
 module.exports = {
   category: category(db, DataTypes),
@@ -36,5 +37,6 @@ module.exports = {
   rent: rent(db, DataTypes),
   shop_expense_detail: shop_expense_detail(db, DataTypes),
   user: user(db, DataTypes),
+  daily_shop_item: daily_shop_item(db, DataTypes),
   db,
 };
