@@ -10,10 +10,18 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(255),
       allowNull: false
     },
+    absence_detail_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
     is_present: {
       type: DataTypes.INTEGER,
       allowNull: false,
       comment: "1: true, 0: false"
+    },
+    date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true
     },
     created_date: {
       type: DataTypes.DATE,

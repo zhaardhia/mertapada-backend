@@ -56,7 +56,59 @@ router.route("/item-shopped-by-category")
       return response.res500(res, "Internal system error, please try again later!");
     });
   })
-  
+
+router.route("/verify-shopped-by-category")
+  .put((req, res, next) => {
+    dailyReportController.verifiedExpenseAllCategoryItem(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+
+router.route("/omset-absence-status")
+  .get((req, res, next) => {
+    dailyReportController.getStatusOmsetAndAbsenceToday(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+
+router.route("/omset")
+  .get((req, res, next) => {
+    dailyReportController.getOmsetForThisDay(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+  .post((req, res, next) => {
+    dailyReportController.insertUpdateOmzet(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+
+router.route("/absence")
+  .get((req, res, next) => {
+    dailyReportController.getOmsetForThisDay(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+  .post((req, res, next) => {
+    dailyReportController.insertUpdateOmzet(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+
+router.route("/verify-final")
+  .put((req, res, next) => {
+    dailyReportController.verifiedOmsetAndAbsence(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+
 
 router.all("*", index);
 

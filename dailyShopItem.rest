@@ -1,0 +1,68 @@
+###
+POST http://localhost:5000/api/v1/daily-shop-item/
+Content-Type: application/json
+
+{
+    "itemShop": [
+        {
+            "id": "lain-lain-001",
+            "category_id": "shop-004",
+            "name": "token listrik",
+            "unit_type": "paket"
+        },
+        {
+            "id": "lain-lain-002",
+            "category_id": "shop-004",
+            "name": "wifi",
+            "unit_type": "paket"
+        },
+        {
+            "id": "lain-lain-003",
+            "category_id": "shop-004",
+            "name": "gas 3 kg",
+            "unit_type": "tabung"
+        },
+        {
+            "id": "lain-lain-004",
+            "category_id": "shop-004",
+            "name": "kertas bungkus",
+            "unit_type": "pack"
+        },
+        {
+            "id": "lain-lain-005",
+            "category_id": "shop-004",
+            "name": "plastik makanan",
+            "unit_type": "pack"
+        },
+        {
+            "id": "lain-lain-006",
+            "category_id": "shop-004",
+            "name": "tas kresek",
+            "unit_type": "pack"
+        },
+        {
+            "id": "lain-lain-007",
+            "category_id": "shop-004",
+            "name": "tisu",
+            "unit_type": "pack"
+        },
+        {
+            "id": "lain-lain-008",
+            "category_id": "shop-004",
+            "name": "air galon",
+            "unit_type": "galon"
+        },
+        {
+            "id": "lain-lain-009",
+            "category_id": "shop-004",
+            "name": "es batu",
+            "unit_type": "pack"
+        },
+        {
+            "id": "lain-lain-010",
+            "category_id": "shop-004",
+            "name": "sabun cuci piring",
+            "unit_type": "pack"
+        }
+    ]
+}

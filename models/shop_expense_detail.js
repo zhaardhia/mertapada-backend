@@ -10,6 +10,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(255),
       allowNull: false
     },
+    daily_report_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
     daily_shop_item_id: {
       type: DataTypes.STRING(255),
       allowNull: true

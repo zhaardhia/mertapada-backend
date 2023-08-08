@@ -14,6 +14,14 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.FLOAT(255,0),
       allowNull: true
     },
+    main_profit: {
+      type: DataTypes.FLOAT(255,0),
+      allowNull: true
+    },
+    other_profit: {
+      type: DataTypes.FLOAT(255,0),
+      allowNull: true
+    },
     shop_expense: {
       type: DataTypes.FLOAT(255,0),
       allowNull: true
@@ -30,7 +38,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.FLOAT(255,0),
       allowNull: true
     },
-    employee_absence_id: {
+    absence_detail_id: {
       type: DataTypes.STRING(255),
       allowNull: true
     },

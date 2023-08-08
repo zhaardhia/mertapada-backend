@@ -1,3 +1,6 @@
+GET http://localhost:5000/api/v1/daily-report/check-category?date=03
+
+###
 GET http://localhost:5000/api/v1/daily-report/item-shopped-by-category?category=shop-001&date=03
 
 ###
