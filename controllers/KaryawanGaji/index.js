@@ -33,6 +33,7 @@ exports.insertOrUpdateEmployee = async (req, res, next) => {
       }
     ]
   */
+  console.log({req: req.body})
   const employeeItems = req.body.employeeItems;
 
   try {

@@ -47,6 +47,7 @@ exports.getIsCategoryFilled = async (req, res, next) => {
     if (getShopCategoryId.length < 1) return response.res400(res, "error get category id. check the system.")
     console.log(`${moment().format("YYYY-MM")}-${date}`)
     
+    let isReadyToVerifCategory = true;
     const responseCheckCategory = await Promise.all(
       getShopCategoryId.map(async (category, index) => {
         console.log({category})
@@ -69,6 +70,7 @@ exports.getIsCategoryFilled = async (req, res, next) => {
 
         })
         console.log({getDailyReport}, category.id)
+        if (!getDailyReport.length > 0) isReadyToVerifCategory = false;
         return {
           ...category,
           filled: Boolean(getDailyReport.length > 0)
@@ -81,11 +83,26 @@ exports.getIsCategoryFilled = async (req, res, next) => {
       where: {
         date: `${moment().format("YYYY-MM")}-${date}`
       },
-      attributes: ["id", "shop_expense"]
+      attributes: ["id", "shop_expense", "status"]
     })
 
     console.log({responseCheckCategory}, {shopToday})
-    return response.res200(res, "000", "success checking is shop category is filled", { shop_expense: shopToday && shopToday.shop_expense ? shopToday.shop_expense : 0, responseCheckCategory })
+
+    const shopTodayHehe = await shop_expense_detail.findAll({
+      raw: true,
+      where: {
+        date: `${moment().format("YYYY-MM")}-${date}`
+      },
+      attributes: ["id", "price"]
+    })
+
+    const totalValue = shopTodayHehe.reduce((accumulator, item) => {
+      return accumulator + item.price;
+    }, 0);
+    console.log({totalValue})
+    
+    const isVerified = shopToday.status === "verified_shop_expense" || shopToday.status === "verified"
+    return response.res200(res, "000", "success checking is shop category is filled", { daily_report_id: shopToday.id, shop_expense: shopToday && shopToday.shop_expense ? shopToday.shop_expense : 0, isReadyToVerifCategory, isVerified, responseCheckCategory })
   } catch (error) {
     console.error(error);
     return response.res400(res, "failed to check shop category.")
@@ -184,11 +201,11 @@ exports.addItemShopDailyReport = async (req, res, next) => {
     where: {
       date: `${moment().format("YYYY-MM")}-${payload.date}`
     },
-    attributes: ["id", "main_profit", "other_profit", "absence_detail_id"]
+    attributes: ["id", "main_profit", "other_profit", "absence_detail_id", "shop_expense"]
   })
-
+  console.log({getDailyReport})
   const daily_report_id = getDailyReport ? getDailyReport.id : nanoid(20);
-  let shopExpense = 0;
+  let shopExpense = getDailyReport ? +getDailyReport.shop_expense : 0;
 
   if (!getDailyReport) {
     await daily_report.create({
@@ -203,36 +220,34 @@ exports.addItemShopDailyReport = async (req, res, next) => {
   try {
     for (const item of payload.item_shop) {
       console.log({item})
-      let getShopItem = null;
-      if (item.daily_shop_item_id !== "additional") {
-        getShopItem = await shop_expense_detail.findOne({
-          raw: true,
-          where: {
+      let getShopItem = await shop_expense_detail.findOne({
+        raw: true,
+        where: {
+          id: item.id,
+          date: `${moment().format("YYYY-MM")}-${payload.date}`,
+          daily_shop_item_id: item.daily_shop_item_id
+        }
+      })
+      console.log({getShopItem})
+      if (getShopItem) {
+        await shop_expense_detail.update(
+          {
+            category_id: item.category_id,
+            daily_shop_item_id: item.daily_shop_item_id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            unit_type: item.unit_type,
+            status: "filled",
             date: `${moment().format("YYYY-MM")}-${payload.date}`,
-            daily_shop_item_id: item.daily_shop_item_id
-          }
-        })
-
-        if (getShopItem) {
-          await shop_expense_detail.update(
-            {
-              category_id: item.category_id,
-              daily_shop_item_id: item.daily_shop_item_id,
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-              unit_type: item.unit_type,
-              status: "filled",
-              date: `${moment().format("YYYY-MM")}-${payload.date}`,
-              updated_date: new Date()
-            },
-            {
-              where: {
-                id: getShopItem.id
-              }
+            updated_date: new Date()
+          },
+          {
+            where: {
+              id: getShopItem.id
             }
-          )
-        } else getShopItem = null;
+          }
+        )
       }
 
       if (!getShopItem) {
@@ -253,19 +268,20 @@ exports.addItemShopDailyReport = async (req, res, next) => {
           }
         )
       }
-      shopExpense = shopExpense + item.price
+      console.log({shopExpense}, item.price)
+      shopExpense = shopExpense + (+item.price)
+      await daily_report.update(
+        {
+          shop_expense: shopExpense
+        },
+        {
+          where: {
+            id: daily_report_id
+          }
+        }
+      )
     }
 
-    await daily_report.update(
-      {
-        shop_expense: shopExpense
-      },
-      {
-        where: {
-          id: daily_report_id
-        }
-      }
-    )
     return response.res200(res, "000", "Sukses menambahkan / mengubah data pengeluaran harian.")
   } catch (error) {
     console.error(error)
@@ -323,7 +339,7 @@ exports.getStatusOmsetAndAbsenceToday = async (req, res, next) => {
       where: {
         date: `${moment().format("YYYY-MM")}-${date}`
       },
-      attributes: ["id", "main_profit", "other_profit", "absence_detail_id"]
+      attributes: ["id", "main_profit", "other_profit", "absence_detail_id", "status"]
     })
     if (!getStatusOmsetAndAbsence) return response.res400(res, "Silahkan isi data belanja terlebih dahulu.")
     
@@ -331,6 +347,8 @@ exports.getStatusOmsetAndAbsenceToday = async (req, res, next) => {
       daily_report_id: getStatusOmsetAndAbsence.id,
       omset_filled: (getStatusOmsetAndAbsence.main_profit && getStatusOmsetAndAbsence.other_profit) ? true : false,
       absence_filled: getStatusOmsetAndAbsence.absence_detail_id ? true : false,
+      // isReadyToVerif: ,
+      isVerified: getStatusOmsetAndAbsence.status === "verified"
     }
     return response.res200(res, "000", `Sukses mendapatkan data status omset dan absen tanggal ${moment().format("YYYY-MM")}-${date}.`, responseStatusOmsetAndAbsence)
   } catch (error) {

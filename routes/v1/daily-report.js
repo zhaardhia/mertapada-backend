@@ -89,7 +89,7 @@ router.route("/omset")
 
 router.route("/absence")
   .get((req, res, next) => {
-    dailyReportController.getOmsetForThisDay(req, res).catch((error) => {
+    dailyReportController.getAbsence(req, res).catch((error) => {
       console.error(error);
       return response.res500(res, "Internal system error, please try again later!");
     });
