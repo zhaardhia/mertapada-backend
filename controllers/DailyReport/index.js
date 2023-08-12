@@ -24,7 +24,7 @@ exports.checkDateInThisMonth = async (req, res, next) => {
       attributes: ["status"]
     })
     if (!findDateInMonth) findDateInMonth = { status: "empty" }
-    arrayDateCheck.push({...findDateInMonth, date: i})
+    arrayDateCheck.push({...findDateInMonth, date: `${i < 10 ? '0'+i : i}`})
   }
   return response.res200(res, "000", "success check date in month", arrayDateCheck)
 }
@@ -347,7 +347,7 @@ exports.getStatusOmsetAndAbsenceToday = async (req, res, next) => {
       daily_report_id: getStatusOmsetAndAbsence.id,
       omset_filled: (getStatusOmsetAndAbsence.main_profit && getStatusOmsetAndAbsence.other_profit) ? true : false,
       absence_filled: getStatusOmsetAndAbsence.absence_detail_id ? true : false,
-      // isReadyToVerif: ,
+      isReadyToVerif: Boolean(getStatusOmsetAndAbsence.main_profit && getStatusOmsetAndAbsence.other_profit && getStatusOmsetAndAbsence.absence_detail_id),
       isVerified: getStatusOmsetAndAbsence.status === "verified"
     }
     return response.res200(res, "000", `Sukses mendapatkan data status omset dan absen tanggal ${moment().format("YYYY-MM")}-${date}.`, responseStatusOmsetAndAbsence)
@@ -387,8 +387,8 @@ exports.getOmsetForThisDay = async (req, res, next) => {
 exports.insertUpdateOmzet = async (req, res, next) => {
   const id = req.body.id;
   const date = req.body.date;
-  const main_profit = req.body.main_profit;
-  const other_profit = req.body.other_profit || 0;
+  const main_profit = +req.body.main_profit;
+  const other_profit = +req.body.other_profit || 0;
 
   if (!date) return response.res400(res, "date is required.")
   if (!main_profit) return response.res400(res, "Omset Utama tidak boleh kosong.")
@@ -415,6 +415,7 @@ exports.insertUpdateOmzet = async (req, res, next) => {
 }
 
 exports.getAbsence = async (req, res, next) => {
+  console.log("ABSENN")
   const date = req.query.date;
   if (!date) return response.res400(res, "date is required.")
 
@@ -424,22 +425,23 @@ exports.getAbsence = async (req, res, next) => {
       where: {
         status: 1,
       },
-      attributes: ["id", "name", "salary", "status"]
+      attributes: ["id", "name", "salary"]
     })
     if (getAllEmployee.length < 1) return response.res400(res, "Data karyawan tidak ada.");
 
     const responseAbsence = await Promise.all(
       getAllEmployee.map(async (employee_entity) => {
+        console.log({employee_entity})
         const getEmployeeAbsence = await employee_absence.findOne({
           raw: true,
           where: {
             date: `${moment().format("YYYY-MM")}-${date}`,
-            employee_id: employee_entity.employee_id
+            employee_id: employee_entity.id
           }
         })
         return {
           ...employee_entity,
-          is_present: (getEmployeeAbsence && getEmployeeAbsence.is_present == 1)
+          is_present: Boolean(getEmployeeAbsence && getEmployeeAbsence.is_present == 1)
         }
       })
     );
@@ -466,23 +468,23 @@ exports.insertUpdateAbsence = async (req, res, next) => {
   const allNotPresent = req.body.allNotPresent;
 
   if (!date) return response.res400(res, "Error. Silahkan hubungi admin.");
-  console.log(payload.absence_item)
 
   if (absenceItem.length < 1 && (allNotPresent === null || allNotPresent === undefined)) return response.res400(res, "Data belum terisi. Silahkan isi data absen dengan lengkap");
 
   const getCurrentStateAbsenceReport = await daily_report.findOne({
     raw: true,
     where: {
-      date
+      date: `${moment().format("YYYY-MM")}-${date}`
     },
     attributes: ["id", "absence_detail_id"]
   })
 
   let absence_detail_id = getCurrentStateAbsenceReport.absence_detail_id || null;
+  const dbTransaction = await db.transaction()
   try {
-    const dbTransaction = await db.transaction()
     if (!getCurrentStateAbsenceReport.absence_detail_id) {    // first time
       absence_detail_id = nanoid(10)
+      console.log({absence_detail_id})
       await daily_report.update(
         {
           absence_detail_id
@@ -490,18 +492,18 @@ exports.insertUpdateAbsence = async (req, res, next) => {
         {
           where: {
             id: getCurrentStateAbsenceReport.id,
-            date
+            date: `${moment().format("YYYY-MM")}-${date}`
           },
           transaction: dbTransaction
         }
       )
-
+      console.log("kwaokoawkwoako")
       // if (allNotPresent) {  // rare case
       for (const absence of absenceItem) {
         await employee_absence.create({
           transaction: dbTransaction,
           id: nanoid(20),
-          employee_id: absence.employee_id,
+          employee_id: absence.id,
           absence_detail_id,
           is_present: allNotPresent ? 0 : absence.is_present === true ? 1 : 0,
           date: `${moment().format("YYYY-MM")}-${date}`,
@@ -514,7 +516,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
         const getCurrentAbsence = await employee_absence.findOne({
           raw: true,
           where: {
-            employee_id: absence.employee_id,
+            employee_id: absence.id,
             date: `${moment().format("YYYY-MM")}-${date}`,
             absence_detail_id
           }
@@ -527,7 +529,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
             },
             {
               where: {
-                employee_id: absence.employee_id,
+                employee_id: absence.id,
                 date: `${moment().format("YYYY-MM")}-${date}`,
                 absence_detail_id
               },
@@ -538,7 +540,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
           await employee_absence.create({
             transaction: dbTransaction,
             id: nanoid(20),
-            employee_id: absence.employee_id,
+            employee_id: absence.id,
             absence_detail_id,
             is_present: allNotPresent ? 0 : absence.is_present === true ? 1 : 0,
             date: `${moment().format("YYYY-MM")}-${date}`,
@@ -554,6 +556,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
     
   } catch (error) {
     console.error(error);
+    await dbTransaction.rollback();
     return response.res400(res, "Gagal menambahkan / mengubah data absen.")
   }
 }
@@ -561,11 +564,42 @@ exports.insertUpdateAbsence = async (req, res, next) => {
 exports.verifiedOmsetAndAbsence = async (req, res, next) => {
   const id = req.body.id
   const date = req.body.date
+  const sure = req.body.sure
+  if (!sure || sure !== "SAYA YAKIN") return response.res400(res, "Anda belum mengetikkan kalimat dengan benar.")
   if (!date) return response.res400(res, "date is required. please check the system.")
 
+  const getDailyReport = await daily_report.findOne({
+    raw: true,
+    where: {
+      id,
+      date: `${moment().format("YYYY-MM")}-${date}`
+    },
+    attributes: ["id", "gross_profit", "main_profit", "other_profit", "shop_expense", "currentbalance"]
+  })
+
+  if (!getDailyReport) return response.res400(res, "Silahkan lengkapi semua data laporan sebelum verifikasi")
+
+  const grossProfit = +getDailyReport.gross_profit === +getDailyReport.main_profit + +getDailyReport.other_profit ? +getDailyReport.gross_profit : +getDailyReport.main_profit + +getDailyReport.other_profit
+  const nettProfit = grossProfit - +getDailyReport.shop_expense
+
+  // moment('2023-08-11').subtract(5, 'days').format("YYYY-MM-DD")
+  const now = `${moment().format("YYYY-MM")}-${date}`
+  const getDailyReportYesterday = await daily_report.findOne({
+    raw: true,
+    where: {
+      id,
+      date: `${moment(now).subtract(1, 'days').format("YYYY-MM-DD")}`
+    },
+    attributes: ["id", "gross_profit", "main_profit", "other_profit", "shop_expense", "currentbalance"]
+  })
+
+  const prevBalance = getDailyReportYesterday ? getDailyReportYesterday.currentbalance : 0
   try {
     await daily_report.update(
       {
+        nett_profit: nettProfit,
+        currentbalance: +prevBalance + +nettProfit,
+        prevbalance: prevBalance,
         status: "verified"
       },
       {
@@ -580,4 +614,22 @@ exports.verifiedOmsetAndAbsence = async (req, res, next) => {
     console.error(error)
     return response.res400(res, "Gagal verifikasi laporan harian. Silahkan hubungi admin.")
   }
+}
+
+exports.getFinalRecap = async (req, res, next) => {
+  if (!req.query.date) return response.res400(res, "date is required")
+
+  const date = req.query.date
+
+  const resFinalRecap = await daily_report.findOne({
+    raw: true,
+    where: {
+      date: `${moment().format("YYYY-MM")}-${date}`
+    },
+    attributes: ["id", "gross_profit", "nett_profit", "shop_expense", "prevbalance", "currentbalance"]
+  })
+
+  if (!resFinalRecap) return response.res400(res, "error. check the system")
+
+  return response.res200(res, "000", "Sukses mengambil data rekap final.", resFinalRecap)
 }

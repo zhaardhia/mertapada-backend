@@ -43,7 +43,7 @@ exports.insertOrUpdateBiayaSewa = async (req, res, next) => {
           id: biayaItem.id
         }
       })
-
+      console.log({getCurrentBiayaItem}, {biayaItem})
       if (getCurrentBiayaItem) {
         await rent.update(
           {
@@ -61,7 +61,7 @@ exports.insertOrUpdateBiayaSewa = async (req, res, next) => {
         await rent.create({
           id: `rent-${nanoid(6)}`,
           name: biayaItem.name,
-          fee: biayaItem.fee,
+          fee: +biayaItem.fee,
           status: 1,
           created_date: new Date(),
           updated_date: new Date()

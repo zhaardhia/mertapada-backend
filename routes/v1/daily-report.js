@@ -95,7 +95,7 @@ router.route("/absence")
     });
   })
   .post((req, res, next) => {
-    dailyReportController.insertUpdateOmzet(req, res).catch((error) => {
+    dailyReportController.insertUpdateAbsence(req, res).catch((error) => {
       console.error(error);
       return response.res500(res, "Internal system error, please try again later!");
     });
@@ -104,6 +104,14 @@ router.route("/absence")
 router.route("/verify-final")
   .put((req, res, next) => {
     dailyReportController.verifiedOmsetAndAbsence(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+
+router.route("/final-recap")
+  .get((req, res, next) => {
+    dailyReportController.getFinalRecap(req, res).catch((error) => {
       console.error(error);
       return response.res500(res, "Internal system error, please try again later!");
     });
