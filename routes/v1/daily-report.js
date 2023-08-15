@@ -117,6 +117,14 @@ router.route("/final-recap")
     });
   })
 
+router.route("/final-recap-detail")
+  .get((req, res, next) => {
+    dailyReportController.getFinalRecapDetail(req, res).catch((error) => {
+      console.error(error);
+      return response.res500(res, "Internal system error, please try again later!");
+    });
+  })
+
 
 router.all("*", index);
 

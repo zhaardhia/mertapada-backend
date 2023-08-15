@@ -9,6 +9,7 @@ const { nanoid } = require('nanoid');
 const jwt = require("jsonwebtoken")
 const { validationEmail } = require("../../middlewares/validator")
 const { db, category, daily_report, shop_expense_detail, daily_shop_item, employee, employee_absence } = require("../../components/database");
+const { findCategoryKey, formatRupiah } = require("../../utils/utils")
 
 exports.checkDateInThisMonth = async (req, res, next) => {
   console.log("lastday of month", moment().endOf('month').format("DD"))
@@ -172,14 +173,14 @@ exports.getItemShoppedByCategory = async (req, res, next) => {
       where: {
         date: `${moment().format("YYYY-MM")}-${payload.date}`
       },
-      attributes: ["id", "shop_expense", "date"]
+      attributes: ["id", "shop_expense", "date", "status"]
     })
     
     let shopExpense = getDailyReport ? getDailyReport.shop_expense : 0
-
+    const isVerified = Boolean(getDailyReport.status === "verified" || getDailyReport.status === "verified_shop_expense")
 
     console.log({ mapShopExpense, getShopExpenseItem })
-    return response.res200(res, "000", "success get data shop", { items: [...mapShopExpense, ...getShopExpenseItem], shopExpense})
+    return response.res200(res, "000", "success get data shop", { items: [...mapShopExpense, ...getShopExpenseItem], shopExpense, isVerified})
   } catch (error) {
     console.error(error)
     return response.res400(res, "error.")
@@ -217,6 +218,7 @@ exports.addItemShopDailyReport = async (req, res, next) => {
     })
   }
 
+  const dbTransaction = await db.transaction()
   try {
     for (const item of payload.item_shop) {
       console.log({item})
@@ -245,7 +247,8 @@ exports.addItemShopDailyReport = async (req, res, next) => {
           {
             where: {
               id: getShopItem.id
-            }
+            },
+            transaction: dbTransaction
           }
         )
       }
@@ -253,6 +256,7 @@ exports.addItemShopDailyReport = async (req, res, next) => {
       if (!getShopItem) {
         await shop_expense_detail.create(
           {
+            transaction: dbTransaction,
             id: item.id,
             category_id: item.category_id,
             daily_report_id,
@@ -277,14 +281,16 @@ exports.addItemShopDailyReport = async (req, res, next) => {
         {
           where: {
             id: daily_report_id
-          }
+          },
+          transaction: dbTransaction
         }
       )
     }
-
+    await dbTransaction.commit()
     return response.res200(res, "000", "Sukses menambahkan / mengubah data pengeluaran harian.")
   } catch (error) {
     console.error(error)
+    await dbTransaction.rollback()
     return response.res400(res, "Gagal menambahkan / mengubah data pengeluaran harian. Silahkan hubungi admin.")
   }
 }
@@ -367,16 +373,19 @@ exports.getOmsetForThisDay = async (req, res, next) => {
         id,
         date: `${moment().format("YYYY-MM")}-${date}`
       },
-      attributes: ["id", "gross_profit", "main_profit", "other_profit"]
+      attributes: ["id", "gross_profit", "main_profit", "other_profit", "status"]
     })
     const responseOmset = {
-      ...getOmsetThisDay
+      ...getOmsetThisDay,
+      isVerified: Boolean(getOmsetThisDay.status === "verified")
     }
     if (!responseOmset.id) responseOmset.id = null;
     if (!responseOmset.gross_profit) responseOmset.gross_profit = 0;
     if (!responseOmset.main_profit) responseOmset.main_profit = 0;
     if (!responseOmset.other_profit) responseOmset.other_profit = 0;
-    
+
+    delete responseOmset.status
+    console.log({responseOmset})
     return response.res200(res, "000", `Sukses mendapatkan data omset tanggal ${moment().format("YYYY-MM")}-${date}.`, responseOmset);
   } catch (error) {
     console.error(error)
@@ -446,7 +455,16 @@ exports.getAbsence = async (req, res, next) => {
       })
     );
 
-    return response.res200(res, "000", "Sukses mendapatkan data absen karyawan.", responseAbsence)
+    const getDailyReport = await daily_report.findOne({
+      raw: true,
+      where: {
+        date: `${moment().format("YYYY-MM")}-${date}`
+      },
+      attributes: ["id", "status"]
+    })
+    const isVerified = Boolean(getDailyReport.status === "verified")
+    console.log(isVerified)
+    return response.res200(res, "000", "Sukses mendapatkan data absen karyawan.", { absence: responseAbsence, isVerified: isVerified })
   } catch (error) {
     console.error(error)
     return response.res400(res, "Gagal mendapatkan data absen. Silahkan hubungi admin.")
@@ -632,4 +650,64 @@ exports.getFinalRecap = async (req, res, next) => {
   if (!resFinalRecap) return response.res400(res, "error. check the system")
 
   return response.res200(res, "000", "Sukses mengambil data rekap final.", resFinalRecap)
+}
+
+exports.getFinalRecapDetail = async (req, res, next) => {
+  const id = req.query.id
+  const date = req.query.date
+
+  try {
+    const getCategoryShop = await category.findAll({
+      raw: true,
+      where: {
+        id: {
+          [Op.like]: 'shop%'
+        }
+      },
+      attributes: ["id", "name"]
+    })
+
+    let responseObj = {}
+    for (const category of getCategoryShop) {
+      const getShopExpenseByCategory = await shop_expense_detail.findAll({
+        raw: true,
+        where: {
+          daily_report_id: id,
+          category_id: category.id,
+          date: `${moment().format("YYYY-MM")}-${date}`
+        },
+        attributes: ["name", "quantity", "unit_type", "price"]
+      })
+      if (getShopExpenseByCategory.length < 1) return response.res400(res, "Gagal mengambil data belanjaan.")
+
+      const mapExpense = getShopExpenseByCategory.map((shopExpense) => {
+        return {
+          ...shopExpense,
+          category: category.name,
+          price: formatRupiah(shopExpense.price),
+          quantity: String(shopExpense.quantity)
+        }
+      })
+      const totalPrice = getShopExpenseByCategory.reduce((accumulator, item) => {
+        return accumulator + item.price;
+      }, 0);
+
+      responseObj[findCategoryKey(category.id)] = mapExpense
+      responseObj[`${findCategoryKey(category.id)}TotalPrice`] = totalPrice
+    }
+
+    const getDailyReport = await daily_report.findOne({
+      raw: true,
+      where: {
+        id,
+        date: `${moment().format("YYYY-MM")}-${date}`
+      },
+      attributes: ["id", "currentbalance", "prevbalance", "nett_profit", "gross_profit", "shop_expense"]
+    })
+    responseObj = { ...responseObj, ...getDailyReport }
+    return response.res200(res, "000", "Sukses mendapatkan data detail rekap final", responseObj)
+  } catch (error) {
+    console.error(error)
+    return response.res400(res, "Gagal mengambil data detail rekap final")
+  }
 }
