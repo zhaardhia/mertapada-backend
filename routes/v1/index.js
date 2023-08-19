@@ -15,6 +15,7 @@ router.all("/connect", (req, res, next) => {
 router.use("/test", require("./test"));
 router.use("/user-pengelola", require("./user-pengelola"));
 router.use("/daily-report", require("./daily-report"));
+router.use("/daily-report-investor", require("./daily-report-investor"));
 router.use("/daily-shop-item", require("./daily-shop-item"));
 router.use("/employee", require("./employee"));
 router.use("/biaya-sewa", require("./biaya-sewa"));

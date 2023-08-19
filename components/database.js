@@ -27,7 +27,8 @@ const rent = require("../models/rent");
 const shop_expense_detail = require("../models/shop_expense_detail");
 const user = require("../models/user");
 const daily_shop_item = require("../models/daily_shop_item");
-
+const monthly_recap = require("../models/monthly_recap");
+const monthly_expense_addition = require("../models/monthly_expense_addition");
 module.exports = {
   category: category(db, DataTypes),
   daily_report: daily_report(db, DataTypes),
@@ -38,5 +39,7 @@ module.exports = {
   shop_expense_detail: shop_expense_detail(db, DataTypes),
   user: user(db, DataTypes),
   daily_shop_item: daily_shop_item(db, DataTypes),
+  monthly_recap: monthly_recap(db, DataTypes),
+  monthly_expense_addition: monthly_expense_addition(db, DataTypes),
   db,
 };
