@@ -4,7 +4,6 @@ const response = require("../../components/response")
 const sequelize = require("sequelize");
 const { Op } = sequelize;
 const moment = require("moment");
-const bcrypt = require("bcrypt")
 const { nanoid } = require('nanoid');
 const jwt = require("jsonwebtoken")
 const { validationEmail } = require("../../middlewares/validator")
@@ -614,7 +613,7 @@ exports.verifiedOmsetAndAbsence = async (req, res, next) => {
     attributes: ["id", "gross_profit", "main_profit", "other_profit", "shop_expense", "currentbalance"]
   })
 
-  const prevBalance = getDailyReportYesterday ? getDailyReportYesterday.currentbalance : 0
+  const prevBalance = date === '01' ? 0 : getDailyReportYesterday ? getDailyReportYesterday.currentbalance : 0
   try {
     await daily_report.update(
       {

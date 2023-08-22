@@ -4,7 +4,6 @@ const response = require("../../components/response")
 const sequelize = require("sequelize");
 const { Op } = sequelize;
 const moment = require("moment");
-const bcrypt = require("bcrypt")
 const { nanoid } = require('nanoid');
 const jwt = require("jsonwebtoken")
 const { validationEmail } = require("../../middlewares/validator")

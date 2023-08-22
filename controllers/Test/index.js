@@ -2,7 +2,6 @@
 
 const response = require("../../components/response")
 const { db } = require("../../components/database")
-const bcrypt = require("bcrypt")
 // const { nanoid } = require('nanoid');
 const jwt = require("jsonwebtoken")
 

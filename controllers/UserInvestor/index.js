@@ -1,7 +1,7 @@
 "use strict";
 
 const response = require("../../components/response")
-const userPengelolaModule = require("./userPengelola.module")
+const userInvestorModule = require("./userInvestor.module")
 const { db } = require("../../components/database")
 // const bcrypt = require("bcrypt")
 const { nanoid } = require('nanoid');
@@ -13,7 +13,7 @@ const bcrypt = require("bcrypt")
 exports.getUserById = async (req, res, next) => {
   console.log(req.query.id)
   if (!req.query.id) return response.res400(res, "id is required.")
-  const resUser = await userPengelolaModule.getUserById(req.query.id)
+  const resUser = await userInvestorModule.getUserById(req.query.id)
   return response.res200(res, "000", "Success get user", resUser)
 }
 
@@ -40,7 +40,7 @@ exports.getUserById = async (req, res, next) => {
 //   if (payload.address && (!payload.city || !payload.postal_code)) response.res400(res, "Kota & kode pos wajib diisi jika alamat sudah diisi.")
 //   const dbTransaction = await db.transaction()
 //   try {
-//     await userPengelolaModule.updateUserProfile(dbTransaction, payload, req.body.id)
+//     await userInvestorModule.updateUserProfile(dbTransaction, payload, req.body.id)
 //     dbTransaction.commit()
 //     return response.res200(res, "000", "Sukses mengubah data user.")
 //   } catch (error) {
@@ -63,10 +63,10 @@ exports.registerUser = async (req, res, next) => {
   if (password.length < 6) return response.res400(res, "Password harus berisi 6 karakter atau lebih.")
   if (password !== confPassword) return response.res400(res, "Password dan Confirm Password tidak cocok.")
 
-  const checkEmail = await userPengelolaModule.getUserByEmail(email);
+  const checkEmail = await userInvestorModule.getUserByEmail(email);
   if (checkEmail) return response.res400(res, "Email sudah terdaftar");
 
-  const checkUsername = await userPengelolaModule.getUserByUsername(username);
+  const checkUsername = await userInvestorModule.getUserByUsername(username);
   if (checkUsername) return response.res400(res, "Username sudah terdaftar")
 
   const salt = await bcrypt.genSalt();
@@ -81,13 +81,13 @@ exports.registerUser = async (req, res, next) => {
     phone,
     fullname, 
     password: hashPassword,
-    role: 0,
+    role: 1,
     created_date: new Date(),
     updated_date: new Date()
   }
   console.log(payload)
   try {
-    await userPengelolaModule.registerPassword(payload)
+    await userInvestorModule.registerPassword(payload)
     return response.res200(res, "000", "Register Berhasil.")
   } catch (error) {
     console.error(error)
@@ -99,12 +99,12 @@ exports.registerUser = async (req, res, next) => {
 //   if (!req.body.email) return response.res400(res, "Email harus terisi.")
 //   if (!validationEmail(req.body.email)) return response.res400(res, "Email harus valid.")
 
-//   const checkEmail = await userPengelolaModule.getUserByEmail(req.body.email);
+//   const checkEmail = await userInvestorModule.getUserByEmail(req.body.email);
 //   if (!checkEmail) return response.res400(res, "Email tidak terdaftar di sistem Monda Kitchen")
 
 //   const forgotPassToken = nanoid(10)
 //   try {
-//     await userPengelolaModule.updateForgotPassToken(checkEmail.id, forgotPassToken)
+//     await userInvestorModule.updateForgotPassToken(checkEmail.id, forgotPassToken)
 //     await forgotPass(checkEmail.email, forgotPassToken)
 //     return response.res200(res, "000", "Sukses mengirim akses ganti password ke email user")
 //   } catch (error) {
@@ -121,14 +121,14 @@ exports.changePassword = async (req, res, next) => {
   if (req.body.password.length < 6) return response.res400(res, "Password harus berisi 6 karakter atau lebih.")
   if (req.body.password !== req.body.confPassword) return response.res400(res, "Password dan Confirm Password tidak cocok.")
 
-  const checkToken = await userPengelolaModule.getTokenForgotPass(req.body.forgot_pass_token)
+  const checkToken = await userInvestorModule.getTokenForgotPass(req.body.forgot_pass_token)
   if (!checkToken) return response.res400(res, "Gagal ganti password, silahkan hubungi CS.")
 
   const salt = await bcrypt.genSalt();
   const hashPassword = await bcrypt.hash(req.body.password, salt);
 
   try {
-    const resChangePassword = await userPengelolaModule.changePassword(checkToken.id, hashPassword)
+    const resChangePassword = await userInvestorModule.changePassword(checkToken.id, hashPassword)
     return response.res200(res, "000", "Sukses ganti password. Silahkan kembali ke halaman login", resChangePassword)
   } catch (error) {
     console.error(error)
@@ -145,9 +145,9 @@ exports.login = async (req, res, next) => {
   if (!payload.username) return response.res400(res, "Username harus diisi.")
   if (!payload.password) return response.res400(res, "Password harus diisi.")
   
-  const user = await userPengelolaModule.getUserByUsername(payload.username);
+  const user = await userInvestorModule.getUserByUsername(payload.username);
   if (!user) return response.res400(res, "Email tidak ditemukan.");
-  if (user.role !== 0) return response.res401(res);
+  if (user.role !== 1) return response.res401(res);
 
   const match = await bcrypt.compare(payload.password, user.password)
   if (!match) return response.res400(res, "Password salah.")
@@ -166,7 +166,7 @@ exports.login = async (req, res, next) => {
   })
   console.log({ refreshToken })
   try {
-    await userPengelolaModule.updateRefreshToken(userId, refreshToken)
+    await userInvestorModule.updateRefreshToken(userId, refreshToken)
   } catch (error) {
     console.error(error)
     return response.res400(res, "failed update token")
@@ -190,7 +190,7 @@ exports.refreshToken = async (req, res, next) => {
     console.log("WKKW")
     if (!refreshToken) return response.res401(res)
     console.log("WKKW2")
-    const user = await userPengelolaModule.getRefreshToken(refreshToken);
+    const user = await userInvestorModule.getRefreshToken(refreshToken);
     console.log(user)
     if (!user[0]) return response.res401(res);
 
@@ -214,12 +214,12 @@ exports.logout = async (req, res, next) => {
     console.log(refreshToken, req.cookies)
     if (!refreshToken) return response.res200(res, "001", "No content")
 
-    const user = await userPengelolaModule.getRefreshToken(refreshToken);
+    const user = await userInvestorModule.getRefreshToken(refreshToken);
     if (!user[0]) return response.res200(res, "001", "No content")
 
     const userId = user[0].id
 
-    await userPengelolaModule.updateRefreshToken(userId, null)
+    await userInvestorModule.updateRefreshToken(userId, null)
     
     res.clearCookie('refreshToken')
     return response.res200(res, "000", "Berhasil Logout.")
