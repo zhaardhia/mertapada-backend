@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken")
 const { validationEmail } = require("../../middlewares/validator")
 const { db, category, daily_report, shop_expense_detail, daily_shop_item, employee, employee_absence } = require("../../components/database");
 const { findCategoryKey, formatRupiah, getCurrentDayMonthYear } = require("../../utils/utils")
-const july = "2023-07";
+const july = "2023-09";
 exports.checkDateInThisMonth = async (req, res, next) => {
   console.log("lastday of month", moment().endOf('month').format("DD"))
   const lastDay = moment().endOf('month').format("DD");
@@ -83,7 +83,7 @@ exports.getIsCategoryFilled = async (req, res, next) => {
     const shopToday = await daily_report.findOne({
       raw: true,
       where: {
-        date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+        date: `${moment(july).format("YYYY-MM")}-${date}`
       },
       attributes: ["id", "shop_expense", "status"]
     })
@@ -93,7 +93,7 @@ exports.getIsCategoryFilled = async (req, res, next) => {
     const shopTodayHehe = await shop_expense_detail.findAll({
       raw: true,
       where: {
-        date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+        date: `${moment(july).format("YYYY-MM")}-${date}`
       },
       attributes: ["id", "price"]
     })
@@ -133,7 +133,7 @@ exports.getItemShoppedByCategory = async (req, res, next) => {
     let getShopExpenseItem = await shop_expense_detail.findAll({
       raw: true,
       where: {
-        date: `${moment("2023-07").format("YYYY-MM")}-${payload.date}`,
+        date: `${moment(july).format("YYYY-MM")}-${payload.date}`,
         category_id: payload.category
       },
       attributes: ["id", "category_id", "daily_shop_item_id", "name", "price", "quantity", "unit_type", "status", "date"]
@@ -156,10 +156,10 @@ exports.getItemShoppedByCategory = async (req, res, next) => {
           quantity: 0,
           unit_type: dailyShopItem.unit_type,
           status: null,
-          date: `${moment("2023-07").format("YYYY-MM")}-${payload.date}`
+          date: `${moment(july).format("YYYY-MM")}-${payload.date}`
         }
       } else {
-        getShopExpenseItem = getShopExpenseItem.filter(shopExpense => shopExpense.daily_shop_item_id !== dailyShopItem.id && shopExpense.date === `${moment("2023-07").format("YYYY-MM")}-${payload.date}`)
+        getShopExpenseItem = getShopExpenseItem.filter(shopExpense => shopExpense.daily_shop_item_id !== dailyShopItem.id && shopExpense.date === `${moment(july).format("YYYY-MM")}-${payload.date}`)
         console.log({getShopExpenseItem})
         return {
           id: findAlreadyShopped.id, 
@@ -178,7 +178,7 @@ exports.getItemShoppedByCategory = async (req, res, next) => {
     const getDailyReport = await daily_report.findOne({
       raw: true,
       where: {
-        date: `${moment("2023-07").format("YYYY-MM")}-${payload.date}`
+        date: `${moment(july).format("YYYY-MM")}-${payload.date}`
       },
       attributes: ["id", "shop_expense", "date", "status"]
     })
@@ -207,7 +207,7 @@ exports.addItemShopDailyReport = async (req, res, next) => {
   const getDailyReport = await daily_report.findOne({
     raw: true,
     where: {
-      date: `${moment("2023-07").format("YYYY-MM")}-${payload.date}`
+      date: `${moment(july).format("YYYY-MM")}-${payload.date}`
     },
     attributes: ["id", "main_profit", "other_profit", "absence_detail_id", "shop_expense"]
   })
@@ -219,7 +219,7 @@ exports.addItemShopDailyReport = async (req, res, next) => {
     await daily_report.create({
       id: daily_report_id,
       status: "filled",
-      date: `${moment("2023-07").format("YYYY-MM")}-${payload.date}`,
+      date: `${moment(july).format("YYYY-MM")}-${payload.date}`,
       created_date: new Date(),
       updated_date: new Date()
     })
@@ -233,7 +233,7 @@ exports.addItemShopDailyReport = async (req, res, next) => {
         raw: true,
         where: {
           id: item.id,
-          date: `${moment("2023-07").format("YYYY-MM")}-${payload.date}`,
+          date: `${moment(july).format("YYYY-MM")}-${payload.date}`,
           daily_shop_item_id: item.daily_shop_item_id
         }
       })
@@ -248,7 +248,7 @@ exports.addItemShopDailyReport = async (req, res, next) => {
             quantity: Number(item.quantity),
             unit_type: item.unit_type,
             status: "filled",
-            date: `${moment("2023-07").format("YYYY-MM")}-${payload.date}`,
+            date: `${moment(july).format("YYYY-MM")}-${payload.date}`,
             updated_date: new Date()
           },
           {
@@ -274,7 +274,7 @@ exports.addItemShopDailyReport = async (req, res, next) => {
             quantity: item.quantity,
             unit_type: item.unit_type,
             status: "filled",
-            date: `${moment("2023-07").format("YYYY-MM")}-${payload.date}`,
+            date: `${moment(july).format("YYYY-MM")}-${payload.date}`,
             created_date: new Date(),
             updated_date: new Date()
           }
@@ -361,11 +361,11 @@ exports.verifiedExpenseAllCategoryItem = async (req, res, next) => {
       {
         where: {
           id,
-          date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+          date: `${moment(july).format("YYYY-MM")}-${date}`
         }
       }
     )
-    return response.res200(res, "000", `Sukses memverifikasi data pengeluaran harian tanggal ${moment("2023-07").format("YYYY-MM")}-${date}. Silahkan untuk melanjutkan pengisian data harian berikutnya.`)
+    return response.res200(res, "000", `Sukses memverifikasi data pengeluaran harian tanggal ${moment(july).format("YYYY-MM")}-${date}. Silahkan untuk melanjutkan pengisian data harian berikutnya.`)
   } catch (error) {
     console.error(error)
     return response.res400(res, "Gagal verifikasi pengeluaran belanja harian. Silahkan hubungi admin.")
@@ -380,7 +380,7 @@ exports.getStatusOmsetAndAbsenceToday = async (req, res, next) => {
     const getStatusOmsetAndAbsence = await daily_report.findOne({
       raw: true,
       where: {
-        date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+        date: `${moment(july).format("YYYY-MM")}-${date}`
       },
       attributes: ["id", "main_profit", "other_profit", "absence_detail_id", "status"]
     })
@@ -393,7 +393,7 @@ exports.getStatusOmsetAndAbsenceToday = async (req, res, next) => {
       isReadyToVerif: Boolean(getStatusOmsetAndAbsence.main_profit && getStatusOmsetAndAbsence.absence_detail_id),
       isVerified: getStatusOmsetAndAbsence.status === "verified"
     }
-    return response.res200(res, "000", `Sukses mendapatkan data status omset dan absen tanggal ${moment("2023-07").format("YYYY-MM")}-${date}.`, responseStatusOmsetAndAbsence)
+    return response.res200(res, "000", `Sukses mendapatkan data status omset dan absen tanggal ${moment(july).format("YYYY-MM")}-${date}.`, responseStatusOmsetAndAbsence)
   } catch (error) {
     console.error(error);
     return response.res400(res, "Gagal mengambil status data omset dan absen")
@@ -408,7 +408,7 @@ exports.getOmsetForThisDay = async (req, res, next) => {
       raw: true,
       where: {
         id,
-        date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+        date: `${moment(july).format("YYYY-MM")}-${date}`
       },
       attributes: ["id", "gross_profit", "main_profit", "other_profit", "status"]
     })
@@ -423,7 +423,7 @@ exports.getOmsetForThisDay = async (req, res, next) => {
 
     delete responseOmset.status
     console.log({responseOmset})
-    return response.res200(res, "000", `Sukses mendapatkan data omset tanggal ${moment("2023-07").format("YYYY-MM")}-${date}.`, responseOmset);
+    return response.res200(res, "000", `Sukses mendapatkan data omset tanggal ${moment(july).format("YYYY-MM")}-${date}.`, responseOmset);
   } catch (error) {
     console.error(error)
     return response.res400(res, )
@@ -449,7 +449,7 @@ exports.insertUpdateOmzet = async (req, res, next) => {
       {
         where: {
           id,
-          date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+          date: `${moment(july).format("YYYY-MM")}-${date}`
         }
       }
     )
@@ -481,7 +481,7 @@ exports.getAbsence = async (req, res, next) => {
         const getEmployeeAbsence = await employee_absence.findOne({
           raw: true,
           where: {
-            date: `${moment("2023-07").format("YYYY-MM")}-${date}`,
+            date: `${moment(july).format("YYYY-MM")}-${date}`,
             employee_id: employee_entity.id
           }
         })
@@ -495,7 +495,7 @@ exports.getAbsence = async (req, res, next) => {
     const getDailyReport = await daily_report.findOne({
       raw: true,
       where: {
-        date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+        date: `${moment(july).format("YYYY-MM")}-${date}`
       },
       attributes: ["id", "status"]
     })
@@ -529,7 +529,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
   const getCurrentStateAbsenceReport = await daily_report.findOne({
     raw: true,
     where: {
-      date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+      date: `${moment(july).format("YYYY-MM")}-${date}`
     },
     attributes: ["id", "absence_detail_id"]
   })
@@ -547,7 +547,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
         {
           where: {
             id: getCurrentStateAbsenceReport.id,
-            date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+            date: `${moment(july).format("YYYY-MM")}-${date}`
           },
           transaction: dbTransaction
         }
@@ -561,7 +561,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
           employee_id: absence.id,
           absence_detail_id,
           is_present: allNotPresent ? 0 : absence.is_present === true ? 1 : 0,
-          date: `${moment("2023-07").format("YYYY-MM")}-${date}`,
+          date: `${moment(july).format("YYYY-MM")}-${date}`,
           created_date: new Date(),
           updated_date: new Date()
         })
@@ -572,7 +572,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
           raw: true,
           where: {
             employee_id: absence.id,
-            date: `${moment("2023-07").format("YYYY-MM")}-${date}`,
+            date: `${moment(july).format("YYYY-MM")}-${date}`,
             absence_detail_id
           }
         })
@@ -585,7 +585,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
             {
               where: {
                 employee_id: absence.id,
-                date: `${moment("2023-07").format("YYYY-MM")}-${date}`,
+                date: `${moment(july).format("YYYY-MM")}-${date}`,
                 absence_detail_id
               },
               transaction: dbTransaction
@@ -598,7 +598,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
             employee_id: absence.id,
             absence_detail_id,
             is_present: allNotPresent ? 0 : absence.is_present === true ? 1 : 0,
-            date: `${moment("2023-07").format("YYYY-MM")}-${date}`,
+            date: `${moment(july).format("YYYY-MM")}-${date}`,
             created_date: new Date(),
             updated_date: new Date()
           })
@@ -627,7 +627,7 @@ exports.verifiedOmsetAndAbsence = async (req, res, next) => {
     raw: true,
     where: {
       id,
-      date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+      date: `${moment(july).format("YYYY-MM")}-${date}`
     },
     attributes: ["id", "gross_profit", "main_profit", "other_profit", "shop_expense", "currentbalance"]
   })
@@ -638,7 +638,7 @@ exports.verifiedOmsetAndAbsence = async (req, res, next) => {
   const nettProfit = grossProfit - +getDailyReport.shop_expense
 
   // moment('2023-08-11').subtract(5, 'days').format("YYYY-MM-DD")
-  const now = `${moment("2023-07").format("YYYY-MM")}-${date}`
+  const now = `${moment(july).format("YYYY-MM")}-${date}`
   console.log({yesterday: moment(now).subtract(1, 'days').format("YYYY-MM-DD"), id})
   const getDailyReportYesterday = await daily_report.findOne({
     raw: true,
@@ -660,11 +660,11 @@ exports.verifiedOmsetAndAbsence = async (req, res, next) => {
       {
         where: {
           id,
-          date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+          date: `${moment(july).format("YYYY-MM")}-${date}`
         }
       }
     )
-    return response.res200(res, "000", `Sukses memverifikasi data laporan harian ${moment("2023-07").format("YYYY-MM")}-${date}. Silahkan melanjutkan untuk melihat rekap data & download file.`)
+    return response.res200(res, "000", `Sukses memverifikasi data laporan harian ${moment(july).format("YYYY-MM")}-${date}. Silahkan melanjutkan untuk melihat rekap data & download file.`)
   } catch (error) {
     console.error(error)
     return response.res400(res, "Gagal verifikasi laporan harian. Silahkan hubungi admin.")
@@ -679,7 +679,7 @@ exports.getFinalRecap = async (req, res, next) => {
   const resFinalRecap = await daily_report.findOne({
     raw: true,
     where: {
-      date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+      date: `${moment(july).format("YYYY-MM")}-${date}`
     },
     attributes: ["id", "gross_profit", "nett_profit", "shop_expense", "prevbalance", "currentbalance"]
   })
@@ -711,7 +711,7 @@ exports.getFinalRecapDetail = async (req, res, next) => {
         where: {
           daily_report_id: id,
           category_id: category.id,
-          date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+          date: `${moment(july).format("YYYY-MM")}-${date}`
         },
         attributes: ["name", "quantity", "unit_type", "price"]
       })
@@ -737,7 +737,7 @@ exports.getFinalRecapDetail = async (req, res, next) => {
       raw: true,
       where: {
         id,
-        date: `${moment("2023-07").format("YYYY-MM")}-${date}`
+        date: `${moment(july).format("YYYY-MM")}-${date}`
       },
       attributes: ["id", "currentbalance", "prevbalance", "nett_profit", "gross_profit", "shop_expense"]
     })
