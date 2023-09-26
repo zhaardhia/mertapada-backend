@@ -619,8 +619,6 @@ exports.insertUpdateAbsence = async (req, res, next) => {
 exports.verifiedOmsetAndAbsence = async (req, res, next) => {
   const id = req.body.id
   const date = req.body.date
-  const sure = req.body.sure
-  if (!sure || sure !== "SAYA YAKIN") return response.res400(res, "Anda belum mengetikkan kalimat dengan benar.")
   if (!date) return response.res400(res, "date is required. please check the system.")
 
   const getDailyReport = await daily_report.findOne({
