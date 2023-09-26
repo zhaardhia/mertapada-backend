@@ -196,7 +196,7 @@ const { findCategoryKey, formatRupiah, sideHeader } = require("../../utils/utils
 exports.getBagiHasil = async (req, res, next) => {
   // const month = req.query.month
   const year = moment().format("YYYY")
-  const month = "07"
+  const month = "09"
   // month = kalo tanggal skrg <= tgl 2, berarti ambil bulan sblmnya. kalo lebih dr 2, ambil bulan berjalan
   console.log({month, year})
 

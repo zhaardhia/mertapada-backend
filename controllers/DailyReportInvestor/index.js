@@ -296,7 +296,6 @@ exports.addItemShopDailyReport = async (req, res, next) => {
       const getDailyReport = await daily_report.findOne({
         raw: true,
         where: {
-          // id,
           date: payload.date
         },
         attributes: ["id", "gross_profit", "main_profit", "other_profit", "shop_expense", "currentbalance"]
