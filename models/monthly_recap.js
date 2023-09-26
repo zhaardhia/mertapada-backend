@@ -6,50 +6,13 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    gross_profit: {
-      type: DataTypes.FLOAT(255,0),
-      allowNull: false,
-      comment: "Pendapatan (Omset)"
-    },
-    shop_expense: {
-      type: DataTypes.FLOAT(255,0),
-      allowNull: false
-    },
-    total_lauk_pauk: {
-      type: DataTypes.FLOAT(255,0),
-      allowNull: false
-    },
-    total_bumbu_sayuran: {
-      type: DataTypes.FLOAT(255,0),
-      allowNull: false
-    },
-    total_sembako_minuman: {
-      type: DataTypes.FLOAT(255,0),
-      allowNull: false
-    },
-    total_others: {
-      type: DataTypes.FLOAT(255,0),
-      allowNull: false
-    },
-    total_gaji: {
-      type: DataTypes.FLOAT(255,0),
-      allowNull: false
-    },
-    total_sewa: {
-      type: DataTypes.FLOAT(255,0),
-      allowNull: false
-    },
-    nett_profit: {
-      type: DataTypes.FLOAT(255,0),
-      allowNull: false
-    },
     status: {
       type: DataTypes.STRING(30),
       allowNull: false,
       defaultValue: "unverified"
     },
     date: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.STRING(15),
       allowNull: false
     },
     created_date: {

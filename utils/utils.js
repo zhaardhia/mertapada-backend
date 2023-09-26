@@ -195,3 +195,7 @@ exports.sideHeader = [
     isBold: false
   }
 ]
+
+exports.getCurrentDayMonthYear = (date) => {
+  return `${moment("2023-07").format(`YYYY-MM-${date}`)}`
+}

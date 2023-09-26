@@ -8,7 +8,7 @@ const { nanoid } = require('nanoid');
 const jwt = require("jsonwebtoken")
 const { validationEmail } = require("../../middlewares/validator")
 // const { forgotPass } = require("../../libs/email")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcryptjs")
 
 exports.getUserById = async (req, res, next) => {
   console.log(req.query.id)

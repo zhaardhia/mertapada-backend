@@ -20,6 +20,9 @@ router.use("/daily-report-investor", require("./daily-report-investor"));
 router.use("/daily-shop-item", require("./daily-shop-item"));
 router.use("/employee", require("./employee"));
 router.use("/biaya-sewa", require("./biaya-sewa"));
+router.use("/monthly-recap-pengelola", require("./monthly-recap-pengelola"));
+router.use("/monthly-recap", require("./monthly-recap"));
+router.use("/bulanan-tambahan", require("./bulanan-tambahan"));
 
 router.all('*', index);
 

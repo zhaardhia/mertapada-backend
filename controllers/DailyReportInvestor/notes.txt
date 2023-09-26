@@ -1,0 +1,27 @@
+add item shop expense
+- validasi yang diedit hanya bisa yg statusnya verified
+- insert all item to shop_expense_detail
+- calculate shopExpense
+- calculate nettProfit = grossProfit - shopExpense
+
+delete shop item
+- get the item in shop_expense_detail to get the price
+- find the daily report, to get the gross_profit, nett_profit, shop_expense, and currentbalance, also prevbalance
+- recalculate nettProfit by gross_profit - (shop_expense before - item price)
+- reassign in daily_report {
+    shopExpense = shop_expense - item price, 
+    nett_profit, 
+    currentbalance = prevBalance + nettProfit
+}
+
+verified laporan algorithm
+- set gross_profit, by just get the gross_profit in db or main profit + other_profit
+- set nettProfit, gross_profit - shop_expense
+- get dailyReportYesterday, for setting prevBalance. for day 1, the prevBalance is 0
+- set field db for daily_report: {
+    nett_profit,
+    currentbalance: prevBalance + nettProfit,
+    prevBalance,
+    status: "verified"
+}
+

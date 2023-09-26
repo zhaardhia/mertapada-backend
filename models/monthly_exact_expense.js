@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('monthly_expense_addition', {
+  return sequelize.define('monthly_exact_expense', {
     id: {
       type: DataTypes.STRING(10),
       allowNull: false,
@@ -18,8 +18,12 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.FLOAT(255,0),
       allowNull: false
     },
+    referrer_category: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
     date: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.STRING(15),
       allowNull: false
     },
     created_date: {
@@ -32,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     sequelize,
-    tableName: 'monthly_expense_addition',
+    tableName: 'monthly_exact_expense',
     timestamps: false,
     indexes: [
       {

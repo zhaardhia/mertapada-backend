@@ -1,4 +1,7 @@
-GET http://localhost:5000/api/v1/daily-report/check-category?date=03
+GET http://localhost:5000/api/v1/daily-report/date-in-month
+
+###
+GET http://localhost:5000/api/v1/daily-report/check-category?date=01
 
 ###
 GET http://localhost:5000/api/v1/daily-report/item-shopped-by-category?category=shop-001&date=03
@@ -28,3 +31,6 @@ Content-Type: application/json
     ],
     "date": 03
 }
+
+###
+GET http://localhost:5000/api/v1/daily-report/final-recap-detail?id=0zLuyQNv5YyXAYz5Gzx3&date=01

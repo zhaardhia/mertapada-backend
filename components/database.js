@@ -28,7 +28,7 @@ const shop_expense_detail = require("../models/shop_expense_detail");
 const user = require("../models/user");
 const daily_shop_item = require("../models/daily_shop_item");
 const monthly_recap = require("../models/monthly_recap");
-const monthly_expense_addition = require("../models/monthly_expense_addition");
+const monthly_exact_expense = require("../models/monthly_exact_expense");
 module.exports = {
   category: category(db, DataTypes),
   daily_report: daily_report(db, DataTypes),
@@ -40,6 +40,6 @@ module.exports = {
   user: user(db, DataTypes),
   daily_shop_item: daily_shop_item(db, DataTypes),
   monthly_recap: monthly_recap(db, DataTypes),
-  monthly_expense_addition: monthly_expense_addition(db, DataTypes),
+  monthly_exact_expense: monthly_exact_expense(db, DataTypes),
   db,
 };

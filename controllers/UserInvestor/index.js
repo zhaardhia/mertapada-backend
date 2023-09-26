@@ -8,7 +8,7 @@ const { nanoid } = require('nanoid');
 const jwt = require("jsonwebtoken")
 const { validationEmail } = require("../../middlewares/validator")
 // const { forgotPass } = require("../../libs/email")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcryptjs")
 
 exports.getUserById = async (req, res, next) => {
   console.log(req.query.id)
@@ -180,7 +180,7 @@ exports.login = async (req, res, next) => {
     // path: "/",
     // sameSite: "None"
   })
-  return response.res200(res, "000", "Login Berhasil.", accessToken)
+  return response.res200(res, "000", "Login Berhasil.", { accessToken, refreshToken })
 }
 
 exports.refreshToken = async (req, res, next) => {

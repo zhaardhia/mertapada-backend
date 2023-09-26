@@ -27,7 +27,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false
     },
     quantity: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.FLOAT(65,1),
       allowNull: false
     },
     unit_type: {

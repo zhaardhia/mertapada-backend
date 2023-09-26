@@ -14,7 +14,6 @@ exports.checkDateInThisMonth = async (req, res, next) => {
   const monthYear = req.query.monthYear;
   if (!monthYear) return response.res400(res, "Harus masukkan bulan dan tahun")
 
-  console.log("lastday of month", moment(monthYear).endOf('month').format("DD"))
   const lastDay = moment(monthYear).endOf('month').format("DD");
   const arrayDateCheck = [];
 
@@ -35,10 +34,9 @@ exports.checkDateInThisMonth = async (req, res, next) => {
 }
 
 exports.getIsCategoryFilled = async (req, res, next) => {
-  console.log("AKAKAKAKAKAK")
   if (!req.query.date) return response.res400(res, "date is required.")
   const date = req.query.date
-  console.log({date}, "KWOKok")
+
   try {
     const getShopCategoryId = await category.findAll({
       raw: true,
@@ -50,23 +48,12 @@ exports.getIsCategoryFilled = async (req, res, next) => {
       attributes: ["id", "name"]
     })
     if (getShopCategoryId.length < 1) return response.res400(res, "error get category id. check the system.")
-    console.log(`${moment().format("YYYY-MM")}-${date}`)
     
     let isReadyToVerifCategory = true;
     const responseCheckCategory = await Promise.all(
       getShopCategoryId.map(async (category, index) => {
-        console.log({category})
-        console.log({index})
-        // const shopExpenseAssociate = shop_expense_detail.hasOne(daily_report, {foreignKey: "shop_expense_detail_id", sourceKey: "id"})
         const getDailyReport = await shop_expense_detail.findAll({
           raw: true,
-          // include: [
-          //   {
-          //     association: shopExpenseAssociate,
-          //     required: false,
-          //     attributes: ["id", "date", "shop_expense"]
-          //   }
-          // ],
           where: {
             date: date,
             category_id: category.id
@@ -74,7 +61,7 @@ exports.getIsCategoryFilled = async (req, res, next) => {
           attributes: ["id", "category_id", "date"],
 
         })
-        console.log({getDailyReport}, category.id)
+
         if (!getDailyReport.length > 0) isReadyToVerifCategory = false;
         return {
           ...category,
@@ -91,8 +78,6 @@ exports.getIsCategoryFilled = async (req, res, next) => {
       attributes: ["id", "shop_expense", "status"]
     })
 
-    console.log({responseCheckCategory}, {shopToday})
-
     const shopTodayHehe = await shop_expense_detail.findAll({
       raw: true,
       where: {
@@ -104,12 +89,18 @@ exports.getIsCategoryFilled = async (req, res, next) => {
     const totalValue = shopTodayHehe.reduce((accumulator, item) => {
       return accumulator + item.price;
     }, 0);
-    console.log({totalValue})
 
     let isVerified = false
     if (!shopToday) isVerified = false
     else isVerified = shopToday.status === "verified_shop_expense" || shopToday.status === "verified"
-    return response.res200(res, "000", "success checking is shop category is filled", { daily_report_id: shopToday ? shopToday.id : null, shop_expense: shopToday && shopToday.shop_expense ? shopToday.shop_expense : 0, isReadyToVerifCategory, isVerified, responseCheckCategory })
+
+    return response.res200(res, "000", "success checking is shop category is filled", { 
+      daily_report_id: shopToday ? shopToday.id : null, 
+      shop_expense: shopToday && shopToday.shop_expense ? shopToday.shop_expense : 0, 
+      isReadyToVerifCategory, 
+      isVerified, 
+      responseCheckCategory 
+    })
   } catch (error) {
     console.error(error);
     return response.res400(res, "failed to check shop category.")
@@ -159,7 +150,7 @@ exports.getItemShoppedByCategory = async (req, res, next) => {
         }
       } else {
         getShopExpenseItem = getShopExpenseItem.filter(shopExpense => shopExpense.daily_shop_item_id !== dailyShopItem.id && shopExpense.date === payload.date)
-        console.log({getShopExpenseItem})
+
         return {
           id: findAlreadyShopped.id, 
           category_id: findAlreadyShopped.category_id, 
@@ -181,11 +172,23 @@ exports.getItemShoppedByCategory = async (req, res, next) => {
       },
       attributes: ["id", "shop_expense", "date", "status"]
     })
+
+    const getDailyReportInMonth = await daily_report.findOne({
+      raw: true,
+      where: {
+        status: "verified"
+      },
+      order: [['date', 'DESC']],
+      limit: 1,
+      attributes: ["date"]
+    })
     
     let shopExpense = getDailyReport ? getDailyReport.shop_expense : 0
     const isVerified = Boolean((getDailyReport && getDailyReport.status === "verified") || (getDailyReport && getDailyReport.status === "verified_shop_expense"))
-    const isEditable = (payload.date === moment().subtract(1, "days").format("YYYY-MM-DD"))
-    console.log({ mapShopExpense, getShopExpenseItem })
+    // const isEditable = (payload.date === moment().subtract(1, "days").format("YYYY-MM-DD"))
+
+    const isEditable = (getDailyReportInMonth && payload.date === getDailyReportInMonth.date)
+
     return response.res200(res, "000", "success get data shop", { items: [...mapShopExpense, ...getShopExpenseItem], shopExpense, isVerified, isEditable})
   } catch (error) {
     console.error(error)
@@ -198,9 +201,18 @@ exports.addItemShopDailyReport = async (req, res, next) => {
     item_shop: req.body.item_shop,
     date: req.body.date
   }
-  console.log(payload.item_shop)
-  console.log(payload.date, moment().subtract(1, "days").format("YYYY-MM-DD"))
-  if (payload.date !== moment().subtract(1, "days").format("YYYY-MM-DD")) return response.res400(res, "Anda tidak diizinkan untuk mengubah data ini.")
+
+  const getDailyReportInMonth = await daily_report.findOne({
+    raw: true,
+    where: {
+      status: "verified"
+    },
+    order: [['date', 'DESC']],
+    limit: 1,
+    attributes: ["date"]
+  })
+
+  if (getDailyReportInMonth && payload.date !== getDailyReportInMonth.date) return response.res400(res, "Anda tidak diizinkan untuk mengubah data ini.")
   if (payload.item_shop.length < 1) return response.res400(res, "Data belum terisi. Silahkan isi data belanja dengan lengkap")
   if (!payload.date) return response.res400(res, "Error. Silahkan hubungi admin.")
 
@@ -211,10 +223,10 @@ exports.addItemShopDailyReport = async (req, res, next) => {
     },
     attributes: ["id", "main_profit", "other_profit", "absence_detail_id", "shop_expense"]
   })
-  console.log({getDailyReport})
+
   const daily_report_id = getDailyReport ? getDailyReport.id : nanoid(20);
   let shopExpense = getDailyReport ? +getDailyReport.shop_expense : 0;
-  console.log("DATEE:", payload.date)
+
   if (!getDailyReport) {
     await daily_report.create({
       id: daily_report_id,
@@ -224,11 +236,10 @@ exports.addItemShopDailyReport = async (req, res, next) => {
       updated_date: new Date()
     })
   }
-  console.log("kWOKAOKW")
+
   const dbTransaction = await db.transaction()
   try {
     for (const item of payload.item_shop) {
-      console.log({item})
       let getShopItem = await shop_expense_detail.findOne({
         raw: true,
         where: {
@@ -237,7 +248,7 @@ exports.addItemShopDailyReport = async (req, res, next) => {
           daily_shop_item_id: item.daily_shop_item_id
         }
       })
-      console.log({getShopItem})
+
       if (getShopItem) {
         await shop_expense_detail.update(
           {
@@ -280,11 +291,26 @@ exports.addItemShopDailyReport = async (req, res, next) => {
           }
         )
       }
-      console.log({shopExpense}, item.price)
       shopExpense = shopExpense + (+item.price)
+
+      const getDailyReport = await daily_report.findOne({
+        raw: true,
+        where: {
+          // id,
+          date: payload.date
+        },
+        attributes: ["id", "gross_profit", "main_profit", "other_profit", "shop_expense", "currentbalance"]
+      })
+    
+      // calculate this if using algorithm for investor to edit this only on state "verified"
+      const grossProfit = +getDailyReport.gross_profit === +getDailyReport.main_profit + +getDailyReport.other_profit ? +getDailyReport.gross_profit : +getDailyReport.main_profit + +getDailyReport.other_profit
+      const nettProfit = grossProfit - shopExpense
+
       await daily_report.update(
         {
-          shop_expense: shopExpense
+          shop_expense: shopExpense,
+          // status: "filled"   // comment this for investor to edit this only on state "verified"
+          nett_profit: nettProfit // use this for investor to edit this only on state "verified"
         },
         {
           where: {
@@ -305,13 +331,47 @@ exports.addItemShopDailyReport = async (req, res, next) => {
 
 exports.deleteDailyShopItemReport = async (req, res, next) => {
   const payload = {
-    id: req.body.id
+    id: req.body.id,
+    date: req.body.date
   }
 
   if (!payload.id) return response.res400(res, "id is required");
 
+  const findItem = await shop_expense_detail.findOne({
+    raw: true,
+    where: {
+      id: payload.id
+    },
+    attributes: ["id", "name", "price"]
+  })
+  if (!findItem) return response.res400(res, "Item tidak ditemukan")
+
+  const findReport = await daily_report.findOne({
+    raw: true,
+    where: {
+      date: `${moment(payload.date).format("YYYY-MM-DD")}`
+    },
+    attributes: ["id", "gross_profit", "nett_profit", "shop_expense", "currentbalance", "prevbalance", "status"]
+  })
+
+  // calculate this if using algorithm for investor to edit this only on state "verified"
+  const grossProfit = +findReport.gross_profit
+  const nettProfit = grossProfit - (Number(findReport.shop_expense) - Number(findItem.price))
+
   try {
     await shop_expense_detail.destroy({ where: { id: payload.id } });
+    await daily_report.update(
+      {
+        shop_expense: Number(findReport.shop_expense) - Number(findItem.price),
+        nett_profit: nettProfit,
+        currentbalance: Number(findReport.prevbalance) + nettProfit
+      },
+      { 
+        where: { 
+          date: `${moment(july).format("YYYY-MM")}-${payload.date}`
+        }
+      }
+    );
     return response.res200(res, "000", "Sukses menghapus data dari laporan pengeluaran harian.")
   } catch (error) {
     console.error(error)
@@ -323,7 +383,7 @@ exports.verifiedExpenseAllCategoryItem = async (req, res, next) => {
   const id = req.body.id
   const date = req.body.date
   if (!date) return response.res400(res, "date is required. please check the system.")
-  if (date !== moment().subtract(1, "days").format("YYYY-MM-DD")) return response.res400(res, "Anda tidak diizinkan untuk mengakses ini.")
+  // if (date !== moment().subtract(1, "days").format("YYYY-MM-DD")) return response.res400(res, "Anda tidak diizinkan untuk mengakses ini.")
 
   try {
     await daily_report.update(
@@ -337,7 +397,7 @@ exports.verifiedExpenseAllCategoryItem = async (req, res, next) => {
         }
       }
     )
-    return response.res200(res, "000", `Sukses memverifikasi data pengeluaran harian tanggal ${moment().format("YYYY-MM")}-${date}. Silahkan untuk melanjutkan pengisian data harian berikutnya.`)
+    return response.res200(res, "000", `Sukses memverifikasi data pengeluaran harian tanggal ${date}. Silahkan untuk melanjutkan pengisian data harian berikutnya.`)
   } catch (error) {
     console.error(error)
     return response.res400(res, "Gagal verifikasi pengeluaran belanja harian. Silahkan hubungi admin.")
@@ -384,10 +444,19 @@ exports.getOmsetForThisDay = async (req, res, next) => {
       },
       attributes: ["id", "gross_profit", "main_profit", "other_profit", "status"]
     })
+    const getDailyReportInMonth = await daily_report.findOne({
+      raw: true,
+      where: {
+        status: "verified"
+      },
+      order: [['date', 'DESC']],
+      limit: 1,
+      attributes: ["date"]
+    })
     const responseOmset = {
       ...getOmsetThisDay,
       isVerified: Boolean(getOmsetThisDay.status === "verified"),
-      isEditable: date === moment().subtract(1, "days").format("YYYY-MM-DD")
+      isEditable: date === getDailyReportInMonth.date
     }
     if (!responseOmset.id) responseOmset.id = null;
     if (!responseOmset.gross_profit) responseOmset.gross_profit = 0;
@@ -395,7 +464,6 @@ exports.getOmsetForThisDay = async (req, res, next) => {
     if (!responseOmset.other_profit) responseOmset.other_profit = 0;
 
     delete responseOmset.status
-    console.log({responseOmset})
     return response.res200(res, "000", `Sukses mendapatkan data omset tanggal ${date}.`, responseOmset);
   } catch (error) {
     console.error(error)
@@ -411,13 +479,27 @@ exports.insertUpdateOmzet = async (req, res, next) => {
 
   if (!date) return response.res400(res, "date is required.")
   if (!main_profit) return response.res400(res, "Omset Utama tidak boleh kosong.")
-  if (date !== moment().subtract(1, "days").format("YYYY-MM-DD")) return response.res400(res, "Anda tidak diizinkan untuk mengakses ini.")
+  // if (date !== moment().subtract(1, "days").format("YYYY-MM-DD")) return response.res400(res, "Anda tidak diizinkan untuk mengakses ini.")
+
+  const findReport = await daily_report.findOne({
+    raw: true,
+    where: {
+      id,
+      date: date
+    },
+    attributes: ["id", "gross_profit", "nett_profit", "main_profit", "other_profit", "shop_expense", "currentbalance", "prevbalance"]
+  })
+
+  const grossProfit = Number(main_profit) + Number(other_profit)
+  const nettProfit = grossProfit - Number(findReport.shop_expense)
   try {
     await daily_report.update(
       {
         main_profit,
         ...(other_profit && { other_profit }),
-        gross_profit: main_profit + other_profit
+        gross_profit: grossProfit,
+        nett_profit: nettProfit,
+        currentbalance: Number(findReport.prevbalance) + nettProfit,
       },
       {
         where: {
@@ -434,7 +516,6 @@ exports.insertUpdateOmzet = async (req, res, next) => {
 }
 
 exports.getAbsence = async (req, res, next) => {
-  console.log("ABSENN")
   const date = req.query.date;
   if (!date) return response.res400(res, "date is required.")
 
@@ -450,7 +531,6 @@ exports.getAbsence = async (req, res, next) => {
 
     const responseAbsence = await Promise.all(
       getAllEmployee.map(async (employee_entity) => {
-        console.log({employee_entity})
         const getEmployeeAbsence = await employee_absence.findOne({
           raw: true,
           where: {
@@ -472,9 +552,20 @@ exports.getAbsence = async (req, res, next) => {
       },
       attributes: ["id", "status"]
     })
+
+    const getDailyReportInMonth = await daily_report.findOne({
+      raw: true,
+      where: {
+        status: "verified"
+      },
+      order: [['date', 'DESC']],
+      limit: 1,
+      attributes: ["date"]
+    })
+
     const isVerified = Boolean(getDailyReport.status === "verified")
-    console.log(isVerified)
-    const isEditable = (date === moment().subtract(1, "days").format("YYYY-MM-DD"))
+    const isEditable = (date === getDailyReportInMonth.date)
+
     return response.res200(res, "000", "Sukses mendapatkan data absen karyawan.", { absence: responseAbsence, isVerified: isVerified, isEditable })
   } catch (error) {
     console.error(error)
@@ -497,7 +588,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
   const allNotPresent = req.body.allNotPresent;
 
   if (!date) return response.res400(res, "Error. Silahkan hubungi admin.");
-  if (date !== moment().subtract(1, "days").format("YYYY-MM-DD")) return response.res400(res, "Anda tidak diizinkan untuk mengakses ini.")
+  // if (date !== moment().subtract(1, "days").format("YYYY-MM-DD")) return response.res400(res, "Anda tidak diizinkan untuk mengakses ini.")
   if (absenceItem.length < 1 && (allNotPresent === null || allNotPresent === undefined)) return response.res400(res, "Data belum terisi. Silahkan isi data absen dengan lengkap");
 
   const getCurrentStateAbsenceReport = await daily_report.findOne({
@@ -513,7 +604,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
   try {
     if (!getCurrentStateAbsenceReport.absence_detail_id) {    // first time
       absence_detail_id = nanoid(10)
-      console.log({absence_detail_id})
+
       await daily_report.update(
         {
           absence_detail_id
@@ -526,7 +617,7 @@ exports.insertUpdateAbsence = async (req, res, next) => {
           transaction: dbTransaction
         }
       )
-      console.log("kwaokoawkwoako")
+
       // if (allNotPresent) {  // rare case
       for (const absence of absenceItem) {
         await employee_absence.create({
@@ -594,9 +685,11 @@ exports.verifiedOmsetAndAbsence = async (req, res, next) => {
   const id = req.body.id
   const date = req.body.date
   const sure = req.body.sure
+
   if (!sure || sure !== "SAYA YAKIN") return response.res400(res, "Anda belum mengetikkan kalimat dengan benar.")
   if (!date) return response.res400(res, "date is required. please check the system.")
-  if (date !== moment().subtract(1, "days").format("YYYY-MM-DD")) return response.res400(res, "Anda tidak diizinkan untuk mengakses ini.")
+
+  // if (date !== moment().subtract(1, "days").format("YYYY-MM-DD")) return response.res400(res, "Anda tidak diizinkan untuk mengakses ini.")
   const getDailyReport = await daily_report.findOne({
     raw: true,
     where: {
@@ -609,6 +702,7 @@ exports.verifiedOmsetAndAbsence = async (req, res, next) => {
   if (!getDailyReport) return response.res400(res, "Silahkan lengkapi semua data laporan sebelum verifikasi")
 
   const grossProfit = +getDailyReport.gross_profit === +getDailyReport.main_profit + +getDailyReport.other_profit ? +getDailyReport.gross_profit : +getDailyReport.main_profit + +getDailyReport.other_profit
+
   const nettProfit = grossProfit - +getDailyReport.shop_expense
 
   // moment('2023-08-11').subtract(5, 'days').format("YYYY-MM-DD")
